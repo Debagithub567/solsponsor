@@ -1,0 +1,629 @@
+{
+  "address": "CdHmtAeZLRFLqeZmfJtEM6deJxbW2i9kqMDJr9kmcP7Y",
+  "metadata": {
+    "name": "solsponsor",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "fund_escrow",
+      "docs": [
+        "Sponsor transfers `contract.amount` lamports into the vault PDA.",
+        "Uses system_program::transfer — no CPI to token program.",
+        "",
+        "Accounts:",
+        "sponsor   — signer, must match contract.sponsor, provides lamports",
+        "contract  — existing SponsorshipContract account (mut)",
+        "vault     — PDA that will hold the SOL"
+      ],
+      "discriminator": [
+        155,
+        18,
+        218,
+        141,
+        182,
+        213,
+        69,
+        201
+      ],
+      "accounts": [
+        {
+          "name": "sponsor",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "contract"
+          ]
+        },
+        {
+          "name": "contract",
+          "writable": true
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_contract",
+      "docs": [
+        "Sponsor creates the SponsorshipContract account and derives the vault PDA.",
+        "The vault PDA is a pure SOL escrow — no token mint required.",
+        "",
+        "Accounts:",
+        "sponsor   — signer, pays rent for the contract account",
+        "contract  — new keypair (generated client-side), stores contract state",
+        "vault     — PDA [\"vault\", contract.key()], will hold locked SOL"
+      ],
+      "discriminator": [
+        181,
+        192,
+        35,
+        141,
+        212,
+        113,
+        138,
+        94
+      ],
+      "accounts": [
+        {
+          "name": "sponsor",
+          "docs": [
+            "Sponsor pays for account rent and signs the transaction"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "contract",
+          "docs": [
+            "New SponsorshipContract account — client generates the keypair",
+            "Space: 8 discriminator + 32 sponsor + 32 athlete + 32 vault +",
+            "8 amount + 1 conditions_met + 1 payment_released + 1 bump + 8 created_at",
+            "= 8 + 32 + 32 + 32 + 8 + 1 + 1 + 1 + 8 = 123 bytes"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "Vault PDA derived from [\"vault\", contract.key()]",
+            "Holds no data — just accumulates SOL lamports"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "athlete",
+          "type": "pubkey"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "refund_sponsor",
+      "docs": [
+        "Returns vault SOL back to the sponsor when conditions were NOT met.",
+        "Callable only by the sponsor, only after conditions_met == false is set.",
+        "",
+        "Accounts:",
+        "sponsor   — signer + recipient (mut), must match contract.sponsor",
+        "contract  — SponsorshipContract (mut)",
+        "vault     — PDA holding the SOL (mut)"
+      ],
+      "discriminator": [
+        137,
+        0,
+        158,
+        28,
+        172,
+        220,
+        165,
+        25
+      ],
+      "accounts": [
+        {
+          "name": "contract",
+          "writable": true
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sponsor",
+          "writable": true,
+          "relations": [
+            "contract"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "release_payment",
+      "docs": [
+        "Transfers SOL from vault PDA → athlete wallet.",
+        "Only succeeds when conditions_met == true.",
+        "",
+        "Uses PDA signer seeds [\"vault\", contract.key(), bump] for the CPI.",
+        "",
+        "Accounts:",
+        "contract  — SponsorshipContract (mut), provides signer seeds context",
+        "vault     — PDA holding the SOL (mut)",
+        "athlete   — destination wallet (mut), must match contract.athlete"
+      ],
+      "discriminator": [
+        24,
+        34,
+        191,
+        86,
+        145,
+        160,
+        183,
+        233
+      ],
+      "accounts": [
+        {
+          "name": "contract",
+          "writable": true
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "athlete",
+          "docs": [
+            "Destination: must match contract.athlete"
+          ],
+          "writable": true,
+          "relations": [
+            "contract"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "verify_conditions",
+      "docs": [
+        "Called by the oracle authority (currently the sponsor for the demo).",
+        "In production: a multisig oracle or a Switchboard/Pyth feed integration.",
+        "",
+        "Sets conditions_met on the contract account.",
+        "The AI oracle (Gemini) has already evaluated the race data off-chain;",
+        "this instruction writes the verdict on-chain.",
+        "",
+        "Accounts:",
+        "authority  — signer, must be the original sponsor / oracle authority",
+        "contract   — existing SponsorshipContract account (mut)"
+      ],
+      "discriminator": [
+        245,
+        248,
+        204,
+        252,
+        144,
+        56,
+        241,
+        134
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "Oracle authority — for demo this is the sponsor.",
+            "Production: replace with a dedicated oracle keypair or multisig."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "contract",
+          "writable": true
+        },
+        {
+          "name": "sponsor",
+          "relations": [
+            "contract"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "conditions_met",
+          "type": "bool"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "SponsorshipContract",
+      "discriminator": [
+        64,
+        25,
+        133,
+        252,
+        109,
+        212,
+        244,
+        128
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "ConditionsVerified",
+      "discriminator": [
+        121,
+        92,
+        141,
+        143,
+        180,
+        240,
+        146,
+        44
+      ]
+    },
+    {
+      "name": "ContractInitialized",
+      "discriminator": [
+        233,
+        69,
+        33,
+        152,
+        208,
+        61,
+        150,
+        192
+      ]
+    },
+    {
+      "name": "EscrowFunded",
+      "discriminator": [
+        228,
+        243,
+        166,
+        74,
+        22,
+        167,
+        157,
+        244
+      ]
+    },
+    {
+      "name": "PaymentReleased",
+      "discriminator": [
+        160,
+        132,
+        155,
+        232,
+        46,
+        254,
+        69,
+        219
+      ]
+    },
+    {
+      "name": "SponsorRefunded",
+      "discriminator": [
+        240,
+        109,
+        192,
+        135,
+        64,
+        233,
+        69,
+        160
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Unauthorized",
+      "msg": "Caller is not authorized to perform this action"
+    },
+    {
+      "code": 6001,
+      "name": "ConditionsNotMet",
+      "msg": "Race conditions have not been verified as met"
+    },
+    {
+      "code": 6002,
+      "name": "ConditionsWereMet",
+      "msg": "Conditions were met — use releasePayment instead of refund"
+    },
+    {
+      "code": 6003,
+      "name": "AlreadyReleased",
+      "msg": "Payment has already been released or refunded"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidAmount",
+      "msg": "Escrow amount must be greater than zero"
+    }
+  ],
+  "types": [
+    {
+      "name": "ConditionsVerified",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "contract",
+            "type": "pubkey"
+          },
+          {
+            "name": "conditions_met",
+            "type": "bool"
+          },
+          {
+            "name": "verifier",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ContractInitialized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "sponsor",
+            "type": "pubkey"
+          },
+          {
+            "name": "athlete",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EscrowFunded",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "sponsor",
+            "type": "pubkey"
+          },
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PaymentReleased",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "athlete",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SponsorRefunded",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "sponsor",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SponsorshipContract",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "sponsor",
+            "docs": [
+              "Wallet that created and funded the escrow"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "athlete",
+            "docs": [
+              "Wallet that receives payment when conditions are met"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "escrow_vault",
+            "docs": [
+              "The vault PDA public key (stored for reference / event indexing)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "docs": [
+              "Lamports locked in the escrow vault"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "conditions_met",
+            "docs": [
+              "Set to true by oracle authority after off-chain AI verification"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "payment_released",
+            "docs": [
+              "Guards against double-release or double-refund"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "PDA bump seed (needed for signer CPI in release/refund)"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "created_at",
+            "docs": [
+              "Unix timestamp of contract creation (for expiry logic in v2)"
+            ],
+            "type": "i64"
+          }
+        ]
+      }
+    }
+  ]
+}
