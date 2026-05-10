@@ -42,7 +42,7 @@ type TxStep = {
 const PAGES: Page[] = ["Overview", "Contract", "Execution", "Architecture"]
 const ESCROW_LAMPORTS = 50_000_000 // 0.05 SOL
 const ESCROW_SOL = "0.05"
-const GEMINI_API_KEY = "AIzaSyAeuRAN0_rnsCA9BdUyl41LFSaaZRkvni4"
+const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY
 
 // ─── Scenario data ───────────────────────────────────────
 const SCENARIOS = {
