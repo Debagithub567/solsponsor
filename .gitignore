@@ -1,0 +1,13 @@
+node_modules
+target
+dist
+build
+
+.env
+
+test-ledger
+ledger
+*.log
+*.json
+
+.DS_Storenode_modules
