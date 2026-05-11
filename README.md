@@ -31,11 +31,11 @@ The current prototype demonstrates this with a **Formula 1 sponsorship scenario*
 
 ## Features
 
-- 🔒 **On-chain escrow** — funds locked in PDA vaults, never held by a central party
-- ⚡ **Automated settlement** — payments release when performance conditions are verified
-- 🌐 **Oracle-ready architecture** — designed to integrate real-world event data for condition verification
-- 👻 **Phantom wallet integration** — live devnet transactions with real wallet signing
-- 📊 **Transaction flow visualization** — animated UI showing escrow state and settlement progress
+-  **On-chain escrow** — funds locked in PDA vaults, never held by a central party
+-  **Automated settlement** — payments release when performance conditions are verified
+-  **Oracle-ready architecture** — designed to integrate real-world event data for condition verification
+-  **Phantom wallet integration** — live devnet transactions with real wallet signing
+-  **Transaction flow visualization** — animated UI showing escrow state and settlement progress
 
 ---
 
